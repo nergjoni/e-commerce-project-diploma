@@ -3,6 +3,8 @@ import { useCartStore } from "../stores/useCartStore";
 
 const CartItem = ({ item }) => {
 	const { removeFromCart, updateQuantity } = useCartStore();
+	const availableStock = Number(item.stock) || 0;
+	const maxQuantityReached = item.quantity >= availableStock;
 
 	return (
 		<div className='rounded-lg border p-4 shadow-sm border-gray-700 bg-gray-800 md:p-6'>
@@ -26,8 +28,9 @@ const CartItem = ({ item }) => {
 						<button
 							className='inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border
 							 border-gray-600 bg-gray-700 hover:bg-gray-600 focus:outline-none 
-						focus:ring-2 focus:ring-emerald-500'
+						focus:ring-2 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50'
 							onClick={() => updateQuantity(item._id, item.quantity + 1)}
+							disabled={maxQuantityReached}
 						>
 							<Plus className='text-gray-300' />
 						</button>
@@ -43,6 +46,9 @@ const CartItem = ({ item }) => {
 						{item.name}
 					</p>
 					<p className='text-sm text-gray-400'>{item.description}</p>
+					<p className={`text-sm ${availableStock <= 0 ? "text-red-300" : "text-gray-400"}`}>
+						{availableStock <= 0 ? "Out of stock" : `${availableStock} in stock`}
+					</p>
 
 					<div className='flex items-center gap-4'>
 						<button

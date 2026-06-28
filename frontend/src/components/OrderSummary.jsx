@@ -4,33 +4,48 @@ import { Link } from "react-router-dom";
 import { MoveRight } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import axios from "../lib/axios";
+import toast from "react-hot-toast";
 
 const stripePromise = loadStripe(
-	"pk_test_51KZYccCoOZF2UhtOwdXQl3vcizup20zqKqT9hVUIsVzsdBrhqbUI2fE0ZdEVLdZfeHjeyFXtqaNsyCJCmZWnjNZa00PzMAjlcL"
+	"pk_test_51TmHdvIr53Cw6ztYyoSOQeIPZiJnEnjDk3abHgGRu2cyVyib0ZeKvV8pnXt50bxjXrIXUa3a6I32JQQP6lU0EBMM002eABnnQz"
 );
 
 const OrderSummary = () => {
-	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore();
+	const { total, subtotal, coupon, isCouponApplied, cart } = useCartStore(); 
 
 	const savings = subtotal - total;
 	const formattedSubtotal = subtotal.toFixed(2);
 	const formattedTotal = total.toFixed(2);
 	const formattedSavings = savings.toFixed(2);
+	const hasInvalidStock = cart.some((item) => {
+		const availableStock = Number(item.stock) || 0;
+		return availableStock <= 0 || item.quantity > availableStock;
+	});
 
 	const handlePayment = async () => {
-		const stripe = await stripePromise;
-		const res = await axios.post("/payments/create-checkout-session", {
-			products: cart,
-			couponCode: coupon ? coupon.code : null,
-		});
+		if (hasInvalidStock) {
+			toast.error("Please adjust your cart. One or more products exceed available stock.");
+			return;
+		}
 
-		const session = res.data;
-		const result = await stripe.redirectToCheckout({
-			sessionId: session.id,
-		});
+		try {
+			const stripe = await stripePromise;
+			const res = await axios.post("/payments/create-checkout-session", {
+				products: cart,
+				couponCode: coupon ? coupon.code : null,
+			});
 
-		if (result.error) {
-			console.error("Error:", result.error);
+			const session = res.data;
+			const result = await stripe.redirectToCheckout({
+				sessionId: session.id,
+			});
+
+			if (result.error) {
+				console.error("Error:", result.error);
+				toast.error(result.error.message || "Checkout failed");
+			}
+		} catch (error) {
+			toast.error(error.response?.data?.message || "Checkout failed");
 		}
 	};
 
@@ -70,10 +85,11 @@ const OrderSummary = () => {
 				</div>
 
 				<motion.button
-					className='flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300'
+					className='flex w-full items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300'
 					whileHover={{ scale: 1.05 }}
 					whileTap={{ scale: 0.95 }}
 					onClick={handlePayment}
+					disabled={hasInvalidStock}
 				>
 					Proceed to Checkout
 				</motion.button>

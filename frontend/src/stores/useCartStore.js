@@ -47,12 +47,24 @@ export const useCartStore = create((set, get) => ({
 		set({ cart: [], coupon: null, total: 0, subtotal: 0 });
 	},
 	addToCart: async (product) => {
+		const availableStock = Number(product.stock) || 0;
+
+		if (availableStock <= 0) {
+			toast.error("This product is out of stock");
+			return;
+		}
+
 		try {
 			await axios.post("/cart", { productId: product._id });
 			toast.success("Product added to cart");
 
 			set((prevState) => {
 				const existingItem = prevState.cart.find((item) => item._id === product._id);
+				if (existingItem && existingItem.quantity >= availableStock) {
+					toast.error(`Only ${availableStock} ${product.name} available`);
+					return prevState;
+				}
+
 				const newCart = existingItem
 					? prevState.cart.map((item) =>
 							item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
@@ -76,11 +88,22 @@ export const useCartStore = create((set, get) => ({
 			return;
 		}
 
-		await axios.put(`/cart/${productId}`, { quantity });
-		set((prevState) => ({
-			cart: prevState.cart.map((item) => (item._id === productId ? { ...item, quantity } : item)),
-		}));
-		get().calculateTotals();
+		const item = get().cart.find((cartItem) => cartItem._id === productId);
+		const availableStock = Number(item?.stock) || 0;
+		if (quantity > availableStock) {
+			toast.error(`Only ${availableStock} ${item.name} available`);
+			return;
+		}
+
+		try {
+			await axios.put(`/cart/${productId}`, { quantity });
+			set((prevState) => ({
+				cart: prevState.cart.map((item) => (item._id === productId ? { ...item, quantity } : item)),
+			}));
+			get().calculateTotals();
+		} catch (error) {
+			toast.error(error.response?.data?.message || "Failed to update quantity");
+		}
 	},
 	calculateTotals: () => {
 		const { cart, coupon } = get();

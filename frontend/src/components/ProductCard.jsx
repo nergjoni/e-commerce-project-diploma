@@ -6,7 +6,15 @@ import { useCartStore } from "../stores/useCartStore";
 const ProductCard = ({ product }) => {
 	const { user } = useUserStore();
 	const { addToCart } = useCartStore();
+	const availableStock = Number(product.stock) || 0;
+	const isOutOfStock = availableStock <= 0;
+
 	const handleAddToCart = () => {
+		if (isOutOfStock) {
+			toast.error("This product is out of stock");
+			return;
+		}
+
 		if (!user) {
 			toast.error("Please login to add products to cart", { id: "login" });
 			return;
@@ -30,13 +38,17 @@ const ProductCard = ({ product }) => {
 						<span className='text-3xl font-bold text-emerald-400'>${product.price}</span>
 					</p>
 				</div>
+				<p className={`mb-4 text-sm ${isOutOfStock ? "text-red-300" : "text-gray-300"}`}>
+					{isOutOfStock ? "Out of stock" : `${availableStock} in stock`}
+				</p>
 				<button
 					className='flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-center text-sm font-medium
-					 text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300'
+					 text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300'
 					onClick={handleAddToCart}
+					disabled={isOutOfStock}
 				>
 					<ShoppingCart size={22} className='mr-2' />
-					Add to cart
+					{isOutOfStock ? "Out of stock" : "Add to cart"}
 				</button>
 			</div>
 		</div>

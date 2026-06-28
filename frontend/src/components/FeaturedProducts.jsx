@@ -42,7 +42,10 @@ const FeaturedProducts = ({ featuredProducts }) => {
 							className='flex transition-transform duration-300 ease-in-out'
 							style={{ transform: `translateX(-${currentIndex * (100 / itemsPerPage)}%)` }}
 						>
-							{featuredProducts?.map((product) => (
+							{featuredProducts?.map((product) => {
+								const availableStock = Number(product.stock) || 0;
+
+								return (
 								<div key={product._id} className='w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-2'>
 									<div className='bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden h-full transition-all duration-300 hover:shadow-xl border border-emerald-500/30'>
 										<div className='overflow-hidden'>
@@ -57,18 +60,23 @@ const FeaturedProducts = ({ featuredProducts }) => {
 											<p className='text-emerald-300 font-medium mb-4'>
 												${product.price.toFixed(2)}
 											</p>
+											<p className={`mb-4 text-sm ${availableStock <= 0 ? "text-red-300" : "text-gray-300"}`}>
+												{availableStock <= 0 ? "Out of stock" : `${availableStock} in stock`}
+											</p>
 											<button
 												onClick={() => addToCart(product)}
+												disabled={availableStock <= 0}
 												className='w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 
-												flex items-center justify-center'
+												flex items-center justify-center disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300'
 											>
 												<ShoppingCart className='w-5 h-5 mr-2' />
-												Add to Cart
+												{availableStock <= 0 ? "Out of stock" : "Add to Cart"}
 											</button>
 										</div>
 									</div>
 								</div>
-							))}
+								);
+							})}
 						</div>
 					</div>
 					<button

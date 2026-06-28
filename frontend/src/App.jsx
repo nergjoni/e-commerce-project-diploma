@@ -5,6 +5,7 @@ import SignUpPage from "./pages/SignUpPage";
 import LoginPage from "./pages/LoginPage";
 import AdminPage from "./pages/AdminPage";
 import CategoryPage from "./pages/CategoryPage";
+import ProductPage from "./pages/ProductPage";
 
 import Navbar from "./components/Navbar";
 import { Toaster } from "react-hot-toast";
@@ -15,6 +16,7 @@ import CartPage from "./pages/CartPage";
 import { useCartStore } from "./stores/useCartStore";
 import PurchaseSuccessPage from "./pages/PurchaseSuccessPage";
 import PurchaseCancelPage from "./pages/PurchaseCancelPage";
+import Chatbot from "./components/Chatbot";
 
 function App() {
 	const { user, checkAuth, checkingAuth } = useUserStore();
@@ -50,7 +52,9 @@ function App() {
 						path='/secret-dashboard'
 						element={user?.role === "admin" ? <AdminPage /> : <Navigate to='/login' />}
 					/>
-					<Route path='/category/:category' element={<CategoryPage />} />
+					<Route path='/category/:mainCategory/:category' element={<CategoryPage />} />
+					<Route path='/category/:mainCategory' element={<CategoryPage />} />
+					<Route path='/product/:id' element={<ProductPage />} />
 					<Route path='/cart' element={user ? <CartPage /> : <Navigate to='/login' />} />
 					<Route
 						path='/purchase-success'
@@ -59,6 +63,7 @@ function App() {
 					<Route path='/purchase-cancel' element={user ? <PurchaseCancelPage /> : <Navigate to='/login' />} />
 				</Routes>
 			</div>
+			<Chatbot />
 			<Toaster />
 		</div>
 	);

@@ -33,7 +33,19 @@ const ProductsList = () => {
 							scope='col'
 							className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'
 						>
-							Category
+							Main Category
+						</th>
+						<th
+							scope='col'
+							className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'
+						>
+							Type
+						</th>
+						<th
+							scope='col'
+							className='px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider'
+						>
+							Stock
 						</th>
 
 						<th
@@ -72,7 +84,15 @@ const ProductsList = () => {
 								<div className='text-sm text-gray-300'>${product.price.toFixed(2)}</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
+								<div className='text-sm text-gray-300 capitalize'>{product.mainCategory || "women"}</div>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
 								<div className='text-sm text-gray-300'>{product.category}</div>
+							</td>
+							<td className='px-6 py-4 whitespace-nowrap'>
+								<div className='text-sm text-gray-300'>
+									{typeof product.stock === "number" ? product.stock : "Not set"}
+								</div>
 							</td>
 							<td className='px-6 py-4 whitespace-nowrap'>
 								<button

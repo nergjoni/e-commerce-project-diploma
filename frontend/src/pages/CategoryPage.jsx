@@ -4,16 +4,33 @@ import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import ProductCard from "../components/ProductCard";
 
-const CategoryPage = () => {
-	const { fetchProductsByCategory, products } = useProductStore();
+const mainCategories = ["women", "men", "babies"];
 
-	const { category } = useParams();
+const CategoryPage = () => {
+	const { fetchProductsByCategory, fetchProductsByMainCategory, fetchProductsByMainAndSubCategory, products } =
+		useProductStore();
+
+	const { mainCategory, category } = useParams();
 
 	useEffect(() => {
-		fetchProductsByCategory(category);
-	}, [fetchProductsByCategory, category]);
+		if (mainCategory && category) {
+			fetchProductsByMainAndSubCategory(mainCategory, category);
+			return;
+		}
 
-	console.log("products:", products);
+		if (mainCategories.includes(mainCategory)) {
+			fetchProductsByMainCategory(mainCategory);
+			return;
+		}
+
+		fetchProductsByCategory(mainCategory);
+	}, [fetchProductsByCategory, fetchProductsByMainAndSubCategory, fetchProductsByMainCategory, mainCategory, category]);
+
+	const title = [mainCategory, category]
+		.filter(Boolean)
+		.map((value) => value.charAt(0).toUpperCase() + value.slice(1))
+		.join(" / ");
+
 	return (
 		<div className='min-h-screen'>
 			<div className='relative z-10 max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
@@ -23,7 +40,7 @@ const CategoryPage = () => {
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.8 }}
 				>
-					{category.charAt(0).toUpperCase() + category.slice(1)}
+					{title}
 				</motion.h1>
 
 				<motion.div

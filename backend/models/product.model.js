@@ -15,9 +15,20 @@ const productSchema = new mongoose.Schema(
       min: 0,
       required: true,
     },
+    stock: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
     image: {
       type: String,
       required: [true, "Image is required"],
+    },
+    mainCategory: {
+      type: String,
+      enum: ["women", "men", "babies"],
+      default: "women",
+      required: true,
     },
     category: {
       type: String,

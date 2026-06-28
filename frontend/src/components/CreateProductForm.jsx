@@ -3,13 +3,21 @@ import { motion } from "framer-motion";
 import { PlusCircle, Upload, Loader } from "lucide-react";
 import { useProductStore } from "../stores/useProductStore";
 
-const categories = ["jeans", "t-shirts", "shoes", "glasses", "jackets", "suits", "bags"];
+const mainCategories = [
+	{ value: "women", label: "Women" },
+	{ value: "men", label: "Men" },
+	{ value: "babies", label: "Babies" },
+];
+
+const categories = ["jeans", "t-shirts", "shoes", "glasses", "jackets", "bags"];
 
 const CreateProductForm = () => {
 	const [newProduct, setNewProduct] = useState({
 		name: "",
 		description: "",
 		price: "",
+		stock: "",
+		mainCategory: "",
 		category: "",
 		image: "",
 	});
@@ -20,7 +28,7 @@ const CreateProductForm = () => {
 		e.preventDefault();
 		try {
 			await createProduct(newProduct);
-			setNewProduct({ name: "", description: "", price: "", category: "", image: "" });
+			setNewProduct({ name: "", description: "", price: "", stock: "", mainCategory: "", category: "", image: "" });
 		} catch {
 			console.log("error creating a product");
 		}
@@ -102,8 +110,50 @@ const CreateProductForm = () => {
 				</div>
 
 				<div>
+					<label htmlFor='stock' className='block text-sm font-medium text-gray-300'>
+						Stock
+					</label>
+					<input
+						type='number'
+						id='stock'
+						name='stock'
+						value={newProduct.stock}
+						onChange={(e) => setNewProduct({ ...newProduct, stock: e.target.value })}
+						min='0'
+						step='1'
+						className='mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm 
+						py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500
+						 focus:border-emerald-500'
+						required
+					/>
+				</div>
+
+				<div>
+					<label htmlFor='mainCategory' className='block text-sm font-medium text-gray-300'>
+						Main Category
+					</label>
+					<select
+						id='mainCategory'
+						name='mainCategory'
+						value={newProduct.mainCategory}
+						onChange={(e) => setNewProduct({ ...newProduct, mainCategory: e.target.value })}
+						className='mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md
+						 shadow-sm py-2 px-3 text-white focus:outline-none 
+						 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500'
+						required
+					>
+						<option value=''>Select a main category</option>
+						{mainCategories.map((category) => (
+							<option key={category.value} value={category.value}>
+								{category.label}
+							</option>
+						))}
+					</select>
+				</div>
+
+				<div>
 					<label htmlFor='category' className='block text-sm font-medium text-gray-300'>
-						Category
+						Product Type
 					</label>
 					<select
 						id='category'

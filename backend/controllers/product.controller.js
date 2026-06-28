@@ -41,7 +41,7 @@ export const getFeaturedProducts = async (req, res) => {
 
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, price, image, category } = req.body;
+    const { name, description, price, image, mainCategory, category, stock } = req.body;
 
     let cloudinaryResponse = null;
 
@@ -55,9 +55,11 @@ export const createProduct = async (req, res) => {
       name,
       description,
       price,
+      stock: Number(stock) || 0,
       image: cloudinaryResponse?.secure_url
         ? cloudinaryResponse.secure_url
         : "",
+      mainCategory,
       category,
     });
 
@@ -108,6 +110,9 @@ export const getRecommendedProducts = async (req, res) => {
           description: 1,
           image: 1,
           price: 1,
+          mainCategory: 1,
+          category: 1,
+          stock: 1,
         },
       },
     ]);
@@ -126,6 +131,72 @@ export const getProductsByCategory = async (req, res) => {
     res.json({ products });
   } catch (error) {
     console.log("Error in getProductsByCategory controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getProductsByMainCategory = async (req, res) => {
+  const { mainCategory } = req.params;
+  try {
+    const products = await Product.find({ mainCategory });
+    res.json({ products });
+  } catch (error) {
+    console.log("Error in getProductsByMainCategory controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getProductsByMainAndSubCategory = async (req, res) => {
+  const { mainCategory, category } = req.params;
+  try {
+    const products = await Product.find({ mainCategory, category });
+    res.json({ products });
+  } catch (error) {
+    console.log("Error in getProductsByMainAndSubCategory controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const searchProducts = async (req, res) => {
+  try {
+    const searchTerm = req.query.q?.trim();
+
+    if (!searchTerm) {
+      return res.json({ products: [] });
+    }
+
+    const terms = searchTerm
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 8);
+
+    const products = await Product.find({
+      $or: terms.flatMap((term) => {
+        const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+        return [{ name: regex }, { description: regex }, { category: regex }, { mainCategory: regex }];
+      }),
+    }).limit(12);
+
+    res.json({ products });
+  } catch (error) {
+    console.log("Error in searchProducts controller", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json(product);
+  } catch (error) {
+    console.log("Error in getProductById controller", error.message);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
