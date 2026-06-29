@@ -33,6 +33,11 @@ const ProductCard = ({ product }) => {
 
 			<div className='mt-4 px-5 pb-5'>
 				<h5 className='text-xl font-semibold tracking-tight text-white'>{product.name}</h5>
+				{product.description && (
+					<p className='mt-2 line-clamp-3 min-h-[3.75rem] text-sm leading-5 text-gray-300'>
+						{product.description}
+					</p>
+				)}
 				<div className='mt-2 mb-5 flex items-center justify-between'>
 					<p>
 						<span className='text-3xl font-bold text-emerald-400'>${product.price}</span>

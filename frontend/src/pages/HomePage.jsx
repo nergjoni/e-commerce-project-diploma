@@ -143,6 +143,26 @@ const HomePage = () => {
 							</div>
 						)}
 					</div>
+
+					<div className='mt-8 flex flex-wrap items-center justify-center gap-3'>
+						{categorySections.map((section) => (
+							<Link
+								key={section.key}
+								to={`/category/${section.key}`}
+								className='group inline-flex h-14 items-center gap-3 rounded-full border border-emerald-500/20 bg-gray-800/85 py-2 pl-2 pr-5 text-base font-semibold text-white shadow-lg shadow-black/20 transition hover:-translate-y-0.5 hover:border-emerald-400/60 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-gray-950'
+							>
+								<span className='flex h-10 w-10 overflow-hidden rounded-full border border-emerald-400/30 bg-gray-900'>
+									<img
+										src={section.imageUrl}
+										alt=''
+										className='h-full w-full object-cover transition duration-300 group-hover:scale-110'
+										loading='lazy'
+									/>
+								</span>
+								<span>{section.name}</span>
+							</Link>
+						))}
+					</div>
 				</section>
 
 				<div className='space-y-16'>
