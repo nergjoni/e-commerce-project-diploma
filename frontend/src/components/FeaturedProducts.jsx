@@ -47,7 +47,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
 
 								return (
 								<div key={product._id} className='w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 flex-shrink-0 px-2'>
-									<div className='bg-white bg-opacity-10 backdrop-blur-sm rounded-lg shadow-lg overflow-hidden h-full transition-all duration-300 hover:shadow-xl border border-emerald-500/30'>
+									<div className='flex h-full flex-col overflow-hidden rounded-lg border border-emerald-500/30 bg-white bg-opacity-10 shadow-lg backdrop-blur-sm transition-all duration-300 hover:shadow-xl'>
 										<div className='overflow-hidden'>
 											<img
 												src={product.image}
@@ -55,7 +55,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
 												className='w-full h-48 object-cover transition-transform duration-300 ease-in-out hover:scale-110'
 											/>
 										</div>
-										<div className='p-4'>
+										<div className='flex flex-1 flex-col p-4'>
 											<h3 className='text-lg font-semibold mb-2 text-white'>{product.name}</h3>
 											<p className='text-emerald-300 font-medium mb-4'>
 												${product.price.toFixed(2)}
@@ -66,7 +66,7 @@ const FeaturedProducts = ({ featuredProducts }) => {
 											<button
 												onClick={() => addToCart(product)}
 												disabled={availableStock <= 0}
-												className='w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 
+												className='mt-auto w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded transition-colors duration-300 
 												flex items-center justify-center disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300'
 											>
 												<ShoppingCart className='w-5 h-5 mr-2' />

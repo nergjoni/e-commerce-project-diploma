@@ -25,13 +25,13 @@ const ProductCard = ({ product }) => {
 	};
 
 	return (
-		<div className='flex w-full relative flex-col overflow-hidden rounded-lg border border-gray-700 shadow-lg'>
+		<div className='flex h-full w-full relative flex-col overflow-hidden rounded-lg border border-gray-700 shadow-lg'>
 			<div className='relative mx-3 mt-3 flex h-60 overflow-hidden rounded-xl'>
 				<img className='object-cover w-full' src={product.image} alt='product image' />
 				<div className='absolute inset-0 bg-black bg-opacity-20' />
 			</div>
 
-			<div className='mt-4 px-5 pb-5'>
+			<div className='mt-4 flex flex-1 flex-col px-5 pb-5'>
 				<h5 className='text-xl font-semibold tracking-tight text-white'>{product.name}</h5>
 				{product.description && (
 					<p className='mt-2 line-clamp-3 min-h-[3.75rem] text-sm leading-5 text-gray-300'>
@@ -47,7 +47,7 @@ const ProductCard = ({ product }) => {
 					{isOutOfStock ? "Out of stock" : `${availableStock} in stock`}
 				</p>
 				<button
-					className='flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-center text-sm font-medium
+					className='mt-auto flex items-center justify-center rounded-lg bg-emerald-600 px-5 py-2.5 text-center text-sm font-medium
 					 text-white hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300'
 					onClick={handleAddToCart}
 					disabled={isOutOfStock}
