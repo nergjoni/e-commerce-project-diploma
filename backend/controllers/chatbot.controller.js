@@ -8,6 +8,7 @@ const MAIN_CATEGORIES = ["women", "men", "babies"];
 const PRODUCT_TYPES = ["jeans", "t-shirts", "shoes", "glasses", "jackets", "bags"];
 const OUTFIT_CATEGORY_ORDER = ["t-shirts", "jeans", "shoes", "jackets", "bags", "glasses"];
 const CURRENCY_SYMBOL = "$";
+const THANKS_PATTERN = /\b(thanks|thank you|thankyou)\b[\s.!?]*$/i;
 const ATTRIBUTE_TERMS = new Set([
   "black",
   "blue",
@@ -99,6 +100,127 @@ const getTodayText = () =>
     day: "numeric",
     timeZone: SHOP_TIME_ZONE,
   }).format(new Date());
+
+const isThanksMessage = (message) => THANKS_PATTERN.test(message.trim());
+
+const getThanksReply = () => "You're welcome. Happy to help.";
+
+const isDiplomaThesisGradeQuestion = (message) =>
+  /\bwhat\s+grade\s+will\s+i\s+get\b/i.test(message) && /\bdiploma\s+thesis\b/i.test(message);
+
+const getDiplomaThesisGradeReply = () => "You will get grade 10, I believe in you!! Keep going, you got this.";
+
+const formatNumber = (value) => {
+  if (!Number.isFinite(value)) return String(value);
+  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(6)));
+};
+
+const tokenizeArithmeticExpression = (expression) => {
+  const normalizedExpression = expression
+    .toLowerCase()
+    .replace(/\bplus\b/g, "+")
+    .replace(/\bminus\b/g, "-")
+    .replace(/\btimes\b|\bmultiplied by\b|\bx\b/g, "*")
+    .replace(/\bdivided by\b|\bover\b/g, "/")
+    .replace(/\bwhat(?:'s| is)?\b|\bwhats\b|\bcalculate\b|\bsolve\b|\bequals?\b|\?/g, " ")
+    .replace(THANKS_PATTERN, " ")
+    .trim();
+
+  if (!/[+\-*/]/.test(normalizedExpression)) return null;
+  if (/[^0-9+\-*/().\s]/.test(normalizedExpression)) return null;
+
+  return normalizedExpression.match(/\d+(?:\.\d+)?|[+\-*/()]/g);
+};
+
+const parseArithmeticTokens = (tokens) => {
+  let index = 0;
+
+  const parseFactor = () => {
+    const token = tokens[index];
+
+    if (token === "+" || token === "-") {
+      index += 1;
+      const value = parseFactor();
+      return token === "-" ? -value : value;
+    }
+
+    if (token === "(") {
+      index += 1;
+      const value = parseExpression();
+      if (tokens[index] !== ")") throw new Error("Missing closing parenthesis");
+      index += 1;
+      return value;
+    }
+
+    if (!/^\d+(?:\.\d+)?$/.test(token || "")) throw new Error("Expected number");
+    index += 1;
+    return Number(token);
+  };
+
+  const parseTerm = () => {
+    let value = parseFactor();
+
+    while (tokens[index] === "*" || tokens[index] === "/") {
+      const operator = tokens[index];
+      index += 1;
+      const nextValue = parseFactor();
+
+      if (operator === "/" && nextValue === 0) throw new Error("Division by zero");
+      value = operator === "*" ? value * nextValue : value / nextValue;
+    }
+
+    return value;
+  };
+
+  function parseExpression() {
+    let value = parseTerm();
+
+    while (tokens[index] === "+" || tokens[index] === "-") {
+      const operator = tokens[index];
+      index += 1;
+      const nextValue = parseTerm();
+      value = operator === "+" ? value + nextValue : value - nextValue;
+    }
+
+    return value;
+  }
+
+  const result = parseExpression();
+  if (index !== tokens.length) throw new Error("Unexpected token");
+  return result;
+};
+
+const solveArithmeticProblem = (message) => {
+  const tokens = tokenizeArithmeticExpression(message);
+  if (!tokens || tokens.length < 3) return null;
+
+  try {
+    const result = parseArithmeticTokens(tokens);
+    const expression = tokens.join(" ").replace(/\s*([()+\-*/])\s*/g, " $1 ").replace(/\s+/g, " ").trim();
+    return `${expression} = ${formatNumber(result)}.`;
+  } catch (error) {
+    return null;
+  }
+};
+
+const asksForFreeProducts = (message) => {
+  const hasFreeTerm = /\b(free|no cost|without paying)\b/i.test(message);
+  const hasProductContext = /\b(products?|items?|anything|something|have|sell|stock|available)\b/i.test(message);
+  const hasZeroPrice =
+    /(?:^|\s)(?:[$\u20ac\u00a3]\s*0(?:\.00)?|0(?:\.00)?\s*(?:[$\u20ac\u00a3]|dollars?|euros?|pounds?))(?:\s|[?.!,]|$)/i.test(
+      message,
+    );
+
+  return hasZeroPrice || (hasFreeTerm && hasProductContext);
+};
+
+const getFreeProductsReply = () => "Sorry, we do not have any free products right now.";
+
+const addThanksAcknowledgement = (reply, message) => {
+  if (!isThanksMessage(message)) return reply;
+  if (reply === getThanksReply()) return reply;
+  return `${reply} You're welcome.`;
+};
 
 const isGeneralChatMessage = (message) => {
   const normalizedMessage = message.toLowerCase();
@@ -320,6 +442,10 @@ const getFallbackReply = ({ message, products, terms, isGeneralChat, intent, out
     return "Hi! I can help you find products, check stock, or suggest something that fits what you are shopping for.";
   }
 
+  if (isThanksMessage(message)) {
+    return getThanksReply();
+  }
+
   if (isGeneralChat) {
     return `I am your shopping assistant. I can chat a little, help you find products, suggest items, and check stock. The main shop sections are ${MAIN_CATEGORIES.join(
       ", ",
@@ -462,6 +588,35 @@ export const chatWithShopAssistant = async (req, res) => {
       return res.status(400).json({ message: "Message is required" });
     }
 
+    if (isDiplomaThesisGradeQuestion(message)) {
+      return res.json({
+        reply: addThanksAcknowledgement(getDiplomaThesisGradeReply(), message),
+        products: [],
+      });
+    }
+
+    const arithmeticReply = solveArithmeticProblem(message);
+    if (arithmeticReply) {
+      return res.json({
+        reply: addThanksAcknowledgement(arithmeticReply, message),
+        products: [],
+      });
+    }
+
+    if (asksForFreeProducts(message)) {
+      return res.json({
+        reply: addThanksAcknowledgement(getFreeProductsReply(), message),
+        products: [],
+      });
+    }
+
+    if (isThanksMessage(message) && getSearchTerms(message).length <= 1) {
+      return res.json({
+        reply: getThanksReply(),
+        products: [],
+      });
+    }
+
     const isGeneralChat = isGeneralChatMessage(message);
     const intent = parseShoppingIntent({ message, history });
     const terms = isGeneralChat ? [] : intent.rankingTerms;
@@ -490,7 +645,7 @@ export const chatWithShopAssistant = async (req, res) => {
       : fallbackReply;
 
     res.json({
-      reply,
+      reply: addThanksAcknowledgement(reply, message),
       products: products.map(({ matchScore, ...product }) => product),
     });
   } catch (error) {
